@@ -273,16 +273,19 @@
 /datum/sanity/proc/onToxin(datum/reagent/toxin/R, multiplier)
 	changeLevel(-R.sanityloss * multiplier)
 
-/datum/sanity/proc/onAlcohol(datum/reagent/ethanol/E, multiplier)
+/datum/sanity/proc/onReagent(datum/reagent/E, multiplier)
 	changeLevel(E.sanity_gain_ingest * multiplier)
 	if(resting && E.taste_tag.len)
 		for(var/taste_tag in E.taste_tag)
-			add_rest(taste_tag, 4 * multiplier/E.taste_tag.len)
+			if(multiplier <= 1 )
+				add_rest(taste_tag, 4 * 1/E.taste_tag.len)  //just so it got somme effect of things with small multipliers
+			else
+				add_rest(taste_tag, 4 * multiplier/E.taste_tag.len)
 
 /datum/sanity/proc/onEat(obj/item/weapon/reagent_containers/food/snacks/snack, snack_sanity_gain, snack_sanity_message)
 	if(world.time > eat_time_message && snack_sanity_message)
 		eat_time_message = world.time + EAT_COOLDOWN_MESSAGE
-		to_chat(owner, SPAN_NOTICE("[snack_sanity_message]"))
+		to_chat(owner, "[snack_sanity_message]")
 	changeLevel(snack_sanity_gain)
 	if(snack.cooked && resting && snack.taste_tag.len)
 		for(var/taste in snack.taste_tag)

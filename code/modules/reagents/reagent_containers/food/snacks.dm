@@ -37,16 +37,17 @@
 		return  list(0, message)
 	if(eater.nutrition > eater.max_nutrition*0.95)
 		message = "You are satisfied and you don't need to eat more."
-		return  list(0, message)
+		return  list(0, SPAN_WARNING(message))
 	if(!base_sanity_gain_pb)
 		message = "This food does not help calm your nerves."
-		return  list(0, message)
+		return  list(0, SPAN_WARNING(message))
 	var/sanity_gain_pb = base_sanity_gain_pb
 	message = "Food helps you relax."
 	if(cooked)
 		sanity_gain_pb += base_sanity_gain_pb * 0.2
 	if(junk_food || !cooked)
-		return  list(sanity_gain_pb, message)
+		message += " But, only healthy food helps you grow."
+		return  list(sanity_gain_pb, SPAN_NOTICE(message))
 	var/table = FALSE
 	var/companions = FALSE
 	var/view_death = FALSE
@@ -71,11 +72,12 @@
 		if(view_death && !eater.stats.getPerk(PERK_NIHILIST))
 			message = "You gaze at the cadaver... Your food doesn't taste so good anymore."
 			sanity_gain_pb = 0
+			return list(sanity_gain_pb, SPAN_WARNING(message))
 
-	return list(sanity_gain_pb, message)
+	return list(sanity_gain_pb, SPAN_NOTICE(message))
 
 	//Placeholder for effect that trigger on eating that aren't tied to reagents.
-/obj/item/weapon/reagent_containers/food/snacks/proc/On_Consume(var/mob/eater, var/mob/feeder = null)
+/obj/item/weapon/reagent_containers/food/snacks/proc/On_Consume(mob/eater, mob/feeder = null)
 	if(!reagents.total_volume)
 		eater.visible_message(
 			SPAN_NOTICE("[eater] finishes eating \the [src]."),
@@ -375,6 +377,7 @@
 	preloaded_reagents = list("doctorsdelight" = 8, "tricordrazine" = 8)
 	bitesize = 3
 	cooked = TRUE
+	taste_tag = list(VEGETARIAN_FOOD,VEGAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/candy
 	name = "candy"
@@ -388,7 +391,7 @@
 	nutriment_desc = list("candy" = 1)
 	preloaded_reagents = list("sugar" = 3)
 	junk_food = TRUE
-
+	taste_tag = list(SWEET_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/candy/donor
 	name = "Donor Candy"
 	desc = "A little treat for blood donors."
@@ -571,6 +574,71 @@
 			src.name = "Frosted Jelly Donut"
 			reagents.add_reagent("sprinkles", 2)
 
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff
+	name = "Masterpiece Donut"
+	desc = "The taste you will never forget."
+	filling_color = "#ED1169"
+	bitesize = 5
+	center_of_mass = list("x"=16, "y"=11)
+	var/list/stats_buff = list()
+	var/buff_power = 6
+	price_tag = 500
+	var/buff_time = 20 MINUTES
+	nutriment_amt = 3
+
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff/On_Consume(var/mob/eater, var/mob/feeder = null)
+	..()
+	if(eater.stats)
+		for(var/stat in stats_buff)
+			if(eater.stats.getTempStat(stat, "donut"))
+				eater.stats.removeTempStat(stat, "donut")
+				eater.stats.addTempStat(stat, buff_power, buff_time, "donut")
+				to_chat(eater, SPAN_NOTICE("Your knowledge of [stat] feels renewed."))
+			eater.stats.addTempStat(stat, buff_power, buff_time, "donut")
+			to_chat(eater, SPAN_NOTICE("Your knowledge of [stat] are increased for a short period of time. Make use of it."))
+
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff/mec
+	name = "Yellow Masterpiece Donut"
+	desc = "The taste you will never forget. Special for engineers."
+	icon_state = "donut_mec"
+	overlay_state = "donut_mec_c"
+	stats_buff = list(STAT_MEC)
+
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff/cog
+	name = "Purple Masterpiece Donut"
+	desc = "The taste you will never forget. Special for intelligent people."
+	icon_state = "donut_cog"
+	overlay_state = "donut_cog_c"
+	stats_buff = list(STAT_COG)
+
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff/bio
+	name = "Green Masterpiece Donut"
+	desc = "The taste you will never forget. Special for medics."
+	icon_state = "donut_bio"
+	overlay_state = "donut_bio_c"
+	stats_buff = list(STAT_BIO)
+
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff/rob
+	name = "Brown Masterpiece Donut"
+	desc = "The taste you will never forget. Special for strong people."
+	icon_state = "donut_rob"
+	overlay_state = "donut_rob_c"
+	stats_buff = list(STAT_ROB)
+
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff/tgh
+	name = "Cream Masterpiece Donut"
+	desc = "The taste you will never forget. Special for tough people."
+	icon_state = "donut_tgh"
+	overlay_state = "donut_tgh_c"
+	stats_buff = list(STAT_TGH)
+
+/obj/item/weapon/reagent_containers/food/snacks/donut/stat_buff/vig
+	name = "Blue Masterpiece Donut"
+	desc = "The taste you will never forget. Special for vigilant people."
+	icon_state = "donut_vig"
+	overlay_state = "donut_vig_c"
+	stats_buff = list(STAT_VIG)
+
 /obj/item/weapon/reagent_containers/food/snacks/egg
 	name = "egg"
 	desc = "An egg!"
@@ -645,7 +713,7 @@
 	center_of_mass = list("x"=16, "y"=14)
 	preloaded_reagents = list("protein" = 3, "sodiumchloride" = 1, "blackpepper" = 1)
 	cooked = TRUE
-
+	taste_tag = list(SALTY_FOOD,SPICY_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/boiledegg
 	name = "Boiled egg"
 	desc = "A hard boiled egg."
@@ -676,7 +744,7 @@
 	nutriment_desc = list("turkey" = 3, "tofu" = 5, "goeyness" = 4)
 	preloaded_reagents = list("stoxin" = 3)
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,VEGAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/stuffing
 	name = "Stuffing"
@@ -687,6 +755,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_amt = 3
 	nutriment_desc = list("dryness" = 2, "bread" = 2)
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/fishfingers
 	name = "Fish Fingers"
@@ -697,6 +766,7 @@
 	center_of_mass = list("x"=16, "y"=13)
 	preloaded_reagents = list("protein" = 4, "carpotoxin" = 3)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/hugemushroomslice
 	name = "huge mushroom slice"
@@ -708,6 +778,7 @@
 	nutriment_amt = 3
 	nutriment_desc = list("raw" = 2, "mushroom" = 2)
 	preloaded_reagents = list("psilocybin" = 3)
+	taste_tag = list(VEGAN_FOOD,VEGAN_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/tomatomeat
 	name = "tomato slice"
@@ -718,6 +789,7 @@
 	center_of_mass = list("x"=17, "y"=16)
 	nutriment_amt = 3
 	nutriment_desc = list("raw" = 2, "tomato" = 3)
+	taste_tag = list(VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/meatball
 	name = "meatball"
@@ -727,7 +799,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=16, "y"=16)
 	preloaded_reagents = list("protein" = 3)
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sausage
 	name = "Sausage"
@@ -737,6 +809,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=16, "y"=16)
 	preloaded_reagents = list("protein" = 6)
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/donkpocket
 	name = "Donk-pocket"
@@ -796,11 +869,13 @@
 	center_of_mass = list("x"=15, "y"=11)
 	preloaded_reagents = list("protein" = 6, "alkysine" = 6)
 	bitesize = 2
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/human
 	var/hname = ""
 	var/job = null
 	filling_color = "#D63C3C"
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/human/burger
 	name = "-burger"
@@ -809,6 +884,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=16, "y"=11)
 	preloaded_reagents = list("protein" = 6)
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/cheeseburger
 	name = "cheeseburger"
@@ -819,7 +895,7 @@
 	nutriment_amt = 2
 	preloaded_reagents = list("protein" = 2)
 	cooked = TRUE
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/monkeyburger
 	name = "burger"
@@ -843,6 +919,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	preloaded_reagents = list("protein" = 6, "carpotoxin" = 3)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD) //fish taste would be nice here. but fish is something hard to get
 
 /obj/item/weapon/reagent_containers/food/snacks/tofuburger
 	name = "Tofu Burger"
@@ -854,7 +931,7 @@
 	nutriment_desc = list("bun" = 2, "pseudo-soy meat" = 3)
 	nutriment_amt = 6
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,VEGAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/roburger
 	name = "roburger"
@@ -869,6 +946,7 @@
 		..()
 		if(prob(5))
 			reagents.add_reagent("nanites", 2)
+	taste_tag = list(BLAND_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/roburgerbig
 	name = "roburger"
@@ -883,6 +961,7 @@
 		..()
 		reagents.add_reagent("nanites", 100)
 		bitesize = 0.1
+	taste_tag = list(INSECTS_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/xenoburger
 	name = "xenoburger"
@@ -895,6 +974,7 @@
 		..()
 		reagents.add_reagent("protein", 8)
 		bitesize = 2
+	taste_tag = list(INSECTS_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/clownburger
 	name = "Clown Burger"
@@ -926,6 +1006,7 @@
 	nutriment_amt = 2
 	preloaded_reagents = list("protein" = 4)
 	cooked = TRUE
+	taste_tag = list(INSECTS_FOOD,MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/panzerburger
 	name = "Panzer Burger"
@@ -937,7 +1018,7 @@
 	nutriment_amt = 1
 	preloaded_reagents = list("protein" = 8)
 	cooked = TRUE
-
+	taste_tag = list(INSECTS_FOOD,MEAT_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/jagerburger
 	name = "Jager Burger"
 	desc = "The hunter becomes the hunted"
@@ -948,7 +1029,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 6)
 	cooked = TRUE
-
+	taste_tag = list(INSECTS_FOOD,MEAT_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/seucheburger
 	name = "Seuche Burger"
 	desc = "The Burger that anti vaxxers love"
@@ -959,7 +1040,7 @@
 	nutriment_amt = 2
 	preloaded_reagents = list("protein" = 4)
 	cooked = TRUE
-
+	taste_tag = list(INSECTS_FOOD,MEAT_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/bigroachburger
 	name = "Big Roach Burger"
 	desc = "Delicious finally some good food"
@@ -970,7 +1051,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 8)
 	cooked = TRUE
-	taste_tag = list(INSECTS_FOOD)
+	taste_tag = list(INSECTS_FOOD,MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/fuhrerburger
 	name = "Fuhrer Burger"
@@ -982,7 +1063,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 8, "fuhrerole" = 3)
 	cooked = TRUE
-	taste_tag = list(INSECTS_FOOD)
+	taste_tag = list(INSECTS_FOOD,MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/kaiserburger
 	name = "Kaiser Burger"
@@ -994,7 +1075,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 10)
 	cooked = TRUE
-	taste_tag = list(INSECTS_FOOD)
+	taste_tag = list(INSECTS_FOOD,MEAT_FOOD)
 
 
 /obj/item/weapon/reagent_containers/food/snacks/omelette
@@ -1019,7 +1100,7 @@
 	nutriment_desc = list("sweetness" = 3, "muffin" = 3)
 	nutriment_amt = 6
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/pie
 	name = "Banana Cream Pie"
@@ -1034,6 +1115,7 @@
 	preloaded_reagents = list("banana" = 5)
 	cooked = TRUE
 	junk_food = TRUE
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/pie/throw_impact(atom/hit_atom)
 	..()
@@ -1055,7 +1137,7 @@
 	nutriment_amt = 4
 	preloaded_reagents = list("berryjuice" = 5)
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/waffles
 	name = "waffles"
@@ -1068,7 +1150,7 @@
 	nutriment_amt = 8
 	bitesize = 2
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/eggplantparm
 	name = "Eggplant Parmigiana"
@@ -1081,7 +1163,7 @@
 	nutriment_amt = 6
 	bitesize = 2
 	cooked = TRUE
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/soylentgreen
 	name = "Soylent Green"
@@ -1093,6 +1175,7 @@
 	center_of_mass = list("x"=15, "y"=11)
 	preloaded_reagents = list("protein" = 10)
 	cooked = TRUE
+	taste_tag = list(VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/soylenviridians
 	name = "Soylen Virdians"
@@ -1105,7 +1188,7 @@
 	nutriment_desc = list("some sort of protein" = 10) //seasoned VERY well.
 	nutriment_amt = 10
 	cooked = TRUE
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/meatpie
 	name = "Meat-pie"
@@ -1117,7 +1200,7 @@
 	center_of_mass = list("x"=16, "y"=13)
 	preloaded_reagents = list("protein" = 10)
 	cooked = TRUE
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/tofupie
 	name = "Tofu-pie"
@@ -1130,7 +1213,7 @@
 	nutriment_desc = list("tofu" = 2, "pie" = 8)
 	nutriment_amt = 10
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/amanita_pie
 	name = "amanita pie"
@@ -1143,7 +1226,7 @@
 	nutriment_amt = 5
 	preloaded_reagents = list("amatoxin" = 3, "psilocybin" = 1)
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD, UMAMI_FOOD,CHEESE_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/plump_pie
 	name = "plump pie"
@@ -1162,6 +1245,7 @@
 			name = "exceptional plump pie"
 			desc = "Microwave is taken by a fey mood! It has cooked an exceptional plump pie!"
 			reagents.add_reagent("tricordrazine", 5)
+	taste_tag = list(SWEET_FOOD, UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/xemeatpie
 	name = "Xeno-pie"
@@ -1172,6 +1256,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=16, "y"=13)
 	preloaded_reagents = list("protein" = 10)
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/wingfangchu
 	name = "Wing Fang Chu"
@@ -1182,6 +1267,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=17, "y"=9)
 	preloaded_reagents = list("protein" = 6)
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/human/kabob
 	name = "-kabob"
@@ -1192,7 +1278,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=17, "y"=15)
 	preloaded_reagents = list("protein" = 8)
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/monkeykabob
 	name = "Meat-kabob"
@@ -1203,7 +1289,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=17, "y"=15)
 	preloaded_reagents = list("protein" = 8)
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/tofukabob
 	name = "Tofu-kabob"
@@ -1230,6 +1316,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 3, "carpotoxin" = 3, "capsaicin" = 3)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/popcorn
 	name = "Popcorn"
@@ -1344,6 +1431,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("slime" = 2, "soy" = 2)
 	nutriment_amt = 2
+	taste_tag = list(BLAND_FOOD,VEGETARIAN_FOOD,VEGAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/spagetti
 	name = "Spaghetti"
@@ -1354,6 +1442,7 @@
 	center_of_mass = list("x"=16, "y"=16)
 	nutriment_desc = list("noodles" = 2)
 	nutriment_amt = 1
+	taste_tag = list(BLAND_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/cheesyfries
 	name = "Cheesy Fries"
@@ -1367,7 +1456,7 @@
 	nutriment_amt = 4
 	preloaded_reagents = list("protein" = 2)
 	cooked = TRUE
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/fortunecookie
 	name = "Fortune cookie"
@@ -1378,6 +1467,7 @@
 	center_of_mass = list("x"=15, "y"=14)
 	nutriment_desc = list("fortune cookie" = 2)
 	nutriment_amt = 3
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/badrecipe
 	name = "Burned mess"
@@ -1398,7 +1488,7 @@
 	center_of_mass = list("x"=16, "y"=13)
 	preloaded_reagents = list("protein" = 4, "sodiumchloride" = 1, "blackpepper" = 1)
 	cooked = TRUE
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/spacylibertyduff
 	name = "Spacy Liberty Duff"
@@ -1412,6 +1502,7 @@
 	nutriment_amt = 6
 	preloaded_reagents = list("psilocybin" = 6)
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/amanitajelly
 	name = "Amanita Jelly"
@@ -1425,6 +1516,7 @@
 	nutriment_amt = 6
 	preloaded_reagents = list("amatoxin" = 6, "psilocybin" = 3)
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/poppypretzel
 	name = "Poppy pretzel"
@@ -1437,6 +1529,7 @@
 	nutriment_desc = list("poppy seeds" = 2, "pretzel" = 3)
 	nutriment_amt = 5
 	cooked = TRUE
+	taste_tag = list(SWEET_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/meatballsoup
 	name = "Meatball soup"
@@ -1448,7 +1541,7 @@
 	center_of_mass = list("x"=16, "y"=8)
 	preloaded_reagents = list("protein" = 8, "water" = 5)
 	cooked = TRUE
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/slimesoup
 	name = "slime soup"
@@ -1457,6 +1550,7 @@
 	filling_color = "#C4DBA0"
 	bitesize = 5
 	preloaded_reagents = list("slimejelly" = 5, "water" = 10)
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/bloodsoup
 	name = "Tomato soup"
@@ -1466,6 +1560,7 @@
 	bitesize = 5
 	center_of_mass = list("x"=16, "y"=7)
 	preloaded_reagents = list("protein" = 2, "blood" = 10, "water" = 5)
+	taste_tag = list(BLAND_FOOD,MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/clownstears
 	name = "Clown's Tears"
@@ -1477,6 +1572,7 @@
 	nutriment_amt = 4
 	bitesize = 5
 	preloaded_reagents = list("banana" = 5, "water" = 10)
+	taste_tag = list(SWEET_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/vegetablesoup
 	name = "Vegetable soup"
@@ -1504,6 +1600,7 @@
 	bitesize = 5
 	preloaded_reagents = list("water" = 5, "tricordrazine" = 5)
 	cooked = TRUE
+	taste_tag = list(VEGETARIAN_FOOD, VEGAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/mysterysoup
 	name = "Mystery soup"
@@ -1568,6 +1665,7 @@
 		if(prob(25))
 			src.desc = "A wish come true!"
 			reagents.add_reagent("nutriment", 8, list("something good" = 8))
+	taste_tag = list(VEGETARIAN_FOOD, VEGAN_FOOD,BLAND_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/hotchili
 	name = "Hot Chili"
@@ -1581,6 +1679,7 @@
 	bitesize = 5
 	preloaded_reagents = list("protein" = 3, "capsaicin" = 3, "tomatojuice" = 2)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,SPICY_FOOD)
 
 
 /obj/item/weapon/reagent_containers/food/snacks/coldchili
@@ -1595,6 +1694,7 @@
 	bitesize = 5
 	preloaded_reagents = list("protein" = 3, "frostoil" = 3, "tomatojuice" = 2)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,SPICY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/monkeycube
 	name = "monkey cube"
@@ -1608,6 +1708,7 @@
 	var/wrapped = FALSE
 	var/monkey_type = "Monkey"
 	preloaded_reagents = list("protein" = 10)
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/monkeycube/attack_self(mob/user as mob)
 	if(wrapped)
@@ -1650,10 +1751,11 @@
 	bitesize = 2
 	nutriment_desc = list("magic" = 3, "buns" = 3)
 	nutriment_amt = 6
+	taste_tag = list(MEAT_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/bigbiteburger
 	name = "Big Bite Burger"
-	desc = "Forget the Big Mac. THIS is the future!"
+	desc = "Forget the Big Mac. THIS is the future! It has big \"R\" stamped on it's bun."
 	icon_state = "bigbiteburger"
 	filling_color = "#E3D681"
 	bitesize = 3
@@ -1662,6 +1764,7 @@
 	nutriment_amt = 4
 	preloaded_reagents = list("protein" = 10)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/enchiladas
 	name = "Enchiladas"
@@ -1675,6 +1778,7 @@
 	nutriment_amt = 2
 	preloaded_reagents = list("protein" = 6, "capsaicin" = 6)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,SPICY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/monkeysdelight
 	name = "monkey's Delight"
@@ -1686,6 +1790,7 @@
 	center_of_mass = list("x"=16, "y"=13)
 	preloaded_reagents = list("protein" = 10, "banana" = 5, "blackpepper" = 1, "sodiumchloride" = 1)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,SWEET_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/baguette
 	name = "Baguette"
@@ -1698,6 +1803,7 @@
 	nutriment_amt = 6
 	preloaded_reagents = list("blackpepper" = 1, "sodiumchloride" = 1)
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/fishandchips
 	name = "Fish and Chips"
@@ -1710,6 +1816,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 3, "carpotoxin" = 3)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sandwich
 	name = "Sandwich"
@@ -1724,7 +1831,7 @@
 	preloaded_reagents = list("protein" = 3)
 	cooked = TRUE
 	junk_food = TRUE
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/toastedsandwich
 	name = "Toasted Sandwich"
@@ -1738,7 +1845,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 3, "carbon" = 2)
 	cooked = TRUE
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/grilledcheese
 	name = "Grilled Cheese Sandwich"
@@ -1765,6 +1872,7 @@
 	nutriment_amt = 5
 	preloaded_reagents = list("tomatojuice" = 10)
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,SALTY_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/rofflewaffles
 	name = "Roffle Waffles"
@@ -1778,7 +1886,7 @@
 	nutriment_amt = 8
 	preloaded_reagents = list("psilocybin" = 8)
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/stew
 	name = "Stew"
@@ -1791,7 +1899,7 @@
 	nutriment_amt = 6
 	preloaded_reagents = list("protein" = 4, "tomatojuice" = 5, "imidazoline" = 5, "water" = 5)
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,SALTY_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/jelliedtoast
 	name = "Jellied Toast"
@@ -1803,13 +1911,14 @@
 	center_of_mass = list("x"=16, "y"=8)
 	nutriment_desc = list("toasted bread" = 2)
 	nutriment_amt = 1
+	taste_tag = list(SWEET_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/jelliedtoast/cherry
 	preloaded_reagents = list("cherryjelly" = 5)
-
+	taste_tag = list(SWEET_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/jelliedtoast/slime
 	preloaded_reagents = list("slimejelly" = 5)
-
+	taste_tag = list(UMAMI_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/jellyburger
 	name = "Jelly Burger"
 	desc = "Culinary delight..?"
@@ -1819,13 +1928,14 @@
 	center_of_mass = list("x"=16, "y"=11)
 	nutriment_desc = list("buns" = 5)
 	nutriment_amt = 5
+	taste_tag = list(UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/jellyburger/slime
 	preloaded_reagents = list("slimejelly" = 5)
-
+	taste_tag = list(SWEET_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/jellyburger/cherry
 	preloaded_reagents = list("cherryjelly" = 5)
-
+	taste_tag = list(UMAMI_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/milosoup
 	name = "Milosoup"
 	desc = "The universes best soup! Yum!!!"
@@ -1837,7 +1947,7 @@
 	nutriment_amt = 8
 	preloaded_reagents = list("water" = 5)
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/stewedsoymeat
 	name = "Stewed Soy Meat"
@@ -1849,7 +1959,7 @@
 	nutriment_desc = list("soy" = 4, "tomato" = 4)
 	nutriment_amt = 8
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,VEGAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/boiledspagetti
 	name = "Boiled Spaghetti"
@@ -1861,6 +1971,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("noodles" = 2)
 	nutriment_amt = 2
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/boiledrice
 	name = "Boiled Rice"
@@ -1872,6 +1983,7 @@
 	center_of_mass = list("x"=17, "y"=11)
 	nutriment_desc = list("rice" = 2)
 	nutriment_amt = 2
+	taste_tag = list(BLAND_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/ricepudding
 	name = "Rice Pudding"
@@ -1884,6 +1996,7 @@
 	nutriment_desc = list("rice" = 2)
 	nutriment_amt = 4
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/pastatomato
 	name = "Spaghetti"
@@ -1897,6 +2010,7 @@
 	nutriment_amt = 6
 	preloaded_reagents = list("tomatojuice" = 10)
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/meatballspagetti
 	name = "Spaghetti & Meatballs"
@@ -1910,7 +2024,7 @@
 	nutriment_amt = 4
 	preloaded_reagents = list("protein" = 4)
 	cooked = TRUE
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/spesslaw
 	name = "Spesslaw"
@@ -1923,6 +2037,7 @@
 	nutriment_amt = 4
 	preloaded_reagents = list("protein" = 4)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/carrotfries
 	name = "Carrot Fries"
@@ -1936,7 +2051,7 @@
 	nutriment_amt = 3
 	preloaded_reagents = list("imidazoline" = 3)
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,VEGAN_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/superbiteburger
 	name = "Super Bite Burger"
@@ -1949,6 +2064,7 @@
 	nutriment_amt = 25
 	preloaded_reagents = list("protein" = 25)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/candiedapple
 	name = "Candied Apple"
@@ -1960,7 +2076,7 @@
 	nutriment_desc = list("apple" = 3, "caramel" = 3, "sweetness" = 2)
 	nutriment_amt = 3
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/applepie
 	name = "Apple Pie"
@@ -1972,7 +2088,7 @@
 	nutriment_desc = list("sweetness" = 2, "apple" = 2, "pie" = 2)
 	nutriment_amt = 4
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/cherrypie
 	name = "Cherry Pie"
@@ -1984,7 +2100,7 @@
 	nutriment_desc = list("sweetness" = 2, "cherry" = 2, "pie" = 2)
 	nutriment_amt = 4
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/twobread
 	name = "Two Bread"
@@ -1996,6 +2112,7 @@
 	nutriment_desc = list("sourness" = 2, "bread" = 2)
 	nutriment_amt = 2
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/jellysandwich
 	name = "Jelly Sandwich"
@@ -2007,12 +2124,15 @@
 	center_of_mass = list("x"=16, "y"=8)
 	nutriment_desc = list("bread" = 2)
 	nutriment_amt = 2
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/jellysandwich/slime
 	preloaded_reagents = list("slimejelly" = 5)
+	taste_tag = list(UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/jellysandwich/cherry
 	preloaded_reagents = list("cherryjelly" = 5)
+	taste_tag = list(SWEET_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/boiledslimecore
 	name = "Boiled slime Core"
@@ -2020,6 +2140,7 @@
 	icon_state = "boiledslimecore" //nonexistant?
 	bitesize = 3
 	preloaded_reagents = list("slimejelly" = 5)
+	taste_tag = list(UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/mint
 	name = "mint"
@@ -2029,6 +2150,7 @@
 	bitesize = 1
 	center_of_mass = list("x"=16, "y"=14)
 	preloaded_reagents = list("mint" = 1)
+	taste_tag = list(UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/mushroomsoup
 	name = "chantrelle soup"
@@ -2041,6 +2163,7 @@
 	nutriment_desc = list("mushroom" = 8, "milk" = 2)
 	nutriment_amt = 8
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/plumphelmetbiscuit
 	name = "plump helmet biscuit"
@@ -2059,6 +2182,7 @@
 			desc = "Microwave is taken by a fey mood! It has cooked an exceptional plump helmet biscuit!"
 			reagents.add_reagent("nutriment", 3)
 			reagents.add_reagent("tricordrazine", 5)
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/chawanmushi
 	name = "chawanmushi"
@@ -2070,6 +2194,7 @@
 	center_of_mass = list("x"=17, "y"=10)
 	preloaded_reagents = list("protein" = 5)
 	cooked = TRUE
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/beetsoup
 	name = "beet soup"
@@ -2085,7 +2210,7 @@
 	New()
 		..()
 		name = pick(list("borsch","bortsch","borstch","borsh","borshch","borscht"))
-
+	taste_tag = list(BLAND_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD,UMAMI_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/tossedsalad
 	name = "tossed salad"
 	desc = "A proper salad, basic and simple, with little bits of carrot, tomato and apple intermingled. Vegan!"
@@ -2112,6 +2237,7 @@
 	bitesize = 3
 	preloaded_reagents = list("protein" = 2)
 	cooked = TRUE
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/appletart
 	name = "golden apple streusel tart"
@@ -2125,6 +2251,7 @@
 	bitesize = 3
 	preloaded_reagents = list("gold" = 5)
 	cooked = TRUE
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 //mre food
 /obj/item/weapon/reagent_containers/food/snacks/mre
@@ -2141,6 +2268,7 @@
 	var/warm = FALSE
 	var/open = FALSE
 	var/list/heated_reagents = list("tricordrazine" = 10)
+	taste_tag = list(BLAND_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/mre/attack_self(mob/user)
 	if(!open)
@@ -2196,6 +2324,7 @@
 	bitesize = 2
 	nutriment_amt = 3
 	preloaded_reagents = list("hyperzine" = 8, "paracetamol" = 5)
+	taste_tag = list(BLAND_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/mre_cracker
 	name = "enriched cracker"
@@ -2207,6 +2336,7 @@
 	bitesize = 2
 	nutriment_amt = 1
 	preloaded_reagents = list("dexalinp" = 1, "steady" = 1, "nicotine" = 1)
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/candy/mre
 	name = "morale bar"
@@ -2254,7 +2384,7 @@
 	nutriment_desc = list("bread" = 10)
 	nutriment_amt = 10
 	preloaded_reagents = list("protein" = 20)
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/meatbreadslice
 	name = "meatbread slice"
@@ -2266,7 +2396,7 @@
 	center_of_mass = list("x"=16, "y"=13)
 	preloaded_reagents = list("protein" = 4, "nutriment" = 2)
 	cooked = TRUE
-	taste_tag = list(MEAT_FOOD)
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/xenomeatbread
 	name = "xenomeatbread loaf"
@@ -2280,6 +2410,7 @@
 	nutriment_desc = list("bread" = 10)
 	nutriment_amt = 10
 	preloaded_reagents = list("protein" = 20)
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/xenomeatbreadslice
 	name = "xenomeatbread slice"
@@ -2292,6 +2423,8 @@
 	nutriment_amt = 2
 	nutriment_desc = list("bread" = 2)
 	preloaded_reagents = list("protein" = 4)
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
+	
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/bananabread
 	name = "Banana-nut bread"
@@ -2305,7 +2438,7 @@
 	nutriment_desc = list("bread" = 10)
 	nutriment_amt = 10
 	preloaded_reagents = list("banana" = 20)
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/bananabreadslice
 	name = "Banana-nut bread slice"
@@ -2317,7 +2450,7 @@
 	center_of_mass = list("x"=16, "y"=8)
 	preloaded_reagents = list("banana" = 4, "nutriment" = 4)
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/tofubread
 	name = "Tofubread"
@@ -2330,7 +2463,7 @@
 	center_of_mass = list("x"=16, "y"=9)
 	nutriment_desc = list("tofu" = 10)
 	nutriment_amt = 30
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,VEGETARIAN_FOOD,SALTY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/tofubreadslice
 	name = "Tofubread slice"
@@ -2343,7 +2476,7 @@
 	nutriment_amt = 6
 	nutriment_desc = list("tofu" = 2)
 	cooked = TRUE
-	taste_tag = list(VEGETARIAN_FOOD)
+	taste_tag = list(VEGETARIAN_FOOD,VEGAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/carrotcake
 	name = "Carrot Cake"
@@ -2357,7 +2490,7 @@
 	nutriment_desc = list("cake" = 10, "sweetness" = 10, "carrot" = 15)
 	nutriment_amt = 25
 	preloaded_reagents = list("imidazoline" = 10)
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/carrotcakeslice
 	name = "Carrot Cake slice"
@@ -2371,7 +2504,7 @@
 	nutriment_desc = list("cake" = 2, "sweetness" = 2, "carrot" = 3)
 	preloaded_reagents = list("imidazoline" = 2)
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/braincake
 	name = "Brain Cake"
@@ -2385,7 +2518,7 @@
 	nutriment_amt = 5
 	bitesize = 2
 	preloaded_reagents = list("protein" = 25, "alkysine" = 10)
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/braincakeslice
 	name = "Brain Cake slice"
@@ -2396,6 +2529,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=16, "y"=12)
 	preloaded_reagents = list("protein" = 5, "nutriment" = 1, "alkysine" = 2)
+	taste_tag = list(MEAT_FOOD,SWEET_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/cheesecake
 	name = "Cheese Cake"
@@ -2433,7 +2567,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("cake" = 10, "sweetness" = 10, "vanilla" = 15)
 	nutriment_amt = 20
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/plaincakeslice
 	name = "Vanilla Cake slice"
@@ -2445,6 +2579,7 @@
 	center_of_mass = list("x"=16, "y"=14)
 	preloaded_reagents = list("nutriment" = 4)
 	cooked = TRUE
+	taste_tag = list(FLOURY_FOOD,BLAND_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/orangecake
 	name = "Orange Cake"
@@ -2456,7 +2591,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("cake" = 10, "sweetness" = 10, "orange" = 15)
 	nutriment_amt = 20
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/orangecakeslice
 	name = "Orange Cake slice"
@@ -2468,6 +2603,7 @@
 	center_of_mass = list("x"=16, "y"=14)
 	preloaded_reagents = list("nutriment" = 4)
 	cooked = TRUE
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/limecake
 	name = "Lime Cake"
@@ -2479,7 +2615,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("cake" = 10, "sweetness" = 10, "lime" = 15)
 	nutriment_amt = 20
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/limecakeslice
 	name = "Lime Cake slice"
@@ -2491,6 +2627,7 @@
 	center_of_mass = list("x"=16, "y"=14)
 	preloaded_reagents = list("nutriment" = 4)
 	cooked = TRUE
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/lemoncake
 	name = "Lemon Cake"
@@ -2502,7 +2639,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("cake" = 10, "sweetness" = 10, "lemon" = 15)
 	nutriment_amt = 20
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/lemoncakeslice
 	name = "Lemon Cake slice"
@@ -2514,6 +2651,7 @@
 	center_of_mass = list("x"=16, "y"=14)
 	preloaded_reagents = list("nutriment" = 4)
 	cooked = TRUE
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/chocolatecake
 	name = "Chocolate Cake"
@@ -2525,7 +2663,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("cake" = 10, "sweetness" = 10, "chocolate" = 15)
 	nutriment_amt = 20
-	taste_tag = list(COCO_FOOD, SWEET_FOOD)
+	taste_tag = list(COCO_FOOD, SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/chocolatecakeslice
 	name = "Chocolate Cake slice"
@@ -2537,7 +2675,7 @@
 	center_of_mass = list("x"=16, "y"=14)
 	preloaded_reagents = list("nutriment" = 4)
 	cooked = TRUE
-	taste_tag = list(COCO_FOOD, SWEET_FOOD)
+	taste_tag = list(COCO_FOOD, SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/cheesewheel
 	name = "Cheese wheel"
@@ -2574,7 +2712,7 @@
 	nutriment_desc = list("cake" = 10, "sweetness" = 10)
 	nutriment_amt = 20
 	preloaded_reagents = list("sprinkles" = 10)
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/birthdaycakeslice
 	name = "Birthday Cake slice"
@@ -2598,6 +2736,7 @@
 	center_of_mass = list("x"=16, "y"=9)
 	nutriment_desc = list("bread" = 6)
 	nutriment_amt = 6
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/breadslice
 	name = "Bread slice"
@@ -2608,6 +2747,7 @@
 	nutriment_amt = 1
 	bitesize = 2
 	center_of_mass = list("x"=16, "y"=4)
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/creamcheesebread
 	name = "Cream Cheese Bread"
@@ -2621,7 +2761,7 @@
 	nutriment_amt = 5
 	bitesize = 2
 	preloaded_reagents = list("protein" = 15)
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/creamcheesebreadslice
 	name = "Cream Cheese Bread slice"
@@ -2633,7 +2773,7 @@
 	center_of_mass = list("x"=16, "y"=13)
 	preloaded_reagents = list("protein" = 3)
 	cooked = TRUE
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/watermelonslice
 	name = "Watermelon Slice"
@@ -2644,6 +2784,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	preloaded_reagents = list("watermelonjuice" = 1)
 	cooked = TRUE
+	taste_tag = list(SWEET_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/applecake
 	name = "Apple Cake"
@@ -2655,7 +2796,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("cake" = 10, "sweetness" = 10, "apple" = 15)
 	nutriment_amt = 15
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/applecakeslice
 	name = "Apple Cake slice"
@@ -2667,7 +2808,7 @@
 	nutriment_amt = 3
 	center_of_mass = list("x"=16, "y"=14)
 	cooked = TRUE
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/pumpkinpie
 	name = "Pumpkin Pie"
@@ -2679,7 +2820,7 @@
 	center_of_mass = list("x"=16, "y"=10)
 	nutriment_desc = list("pie" = 5, "cream" = 5, "pumpkin" = 5)
 	nutriment_amt = 15
-	taste_tag = list(SWEET_FOOD)
+	taste_tag = list(SWEET_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/pumpkinpieslice
 	name = "Pumpkin Pie slice"
@@ -2701,6 +2842,7 @@
 	center_of_mass = list("x"=17, "y"=6)
 	nutriment_desc = list("salt" = 1, "cracker" = 2)
 	nutriment_amt = 1
+	taste_tag = list(BLAND_FOOD,SPICY_FOOD)
 
 
 
@@ -2770,7 +2912,7 @@
 	nutriment_amt = 35
 	bitesize = 2
 	preloaded_reagents = list("protein" = 5)
-	taste_tag = list(CHEESE_FOOD, CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,UMAMI_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/mushroompizzaslice
 	name = "Mushroompizza slice"
@@ -2781,7 +2923,8 @@
 	center_of_mass = list("x"=18, "y"=13)
 	preloaded_reagents = list("nutriment" = 5, "protein" = 1)
 	cooked = TRUE
-	taste_tag = list(CHEESE_FOOD, CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,UMAMI_FOOD)
+
 
 /obj/item/weapon/reagent_containers/food/snacks/sliceable/pizza/vegetablepizza
 	name = "Vegetable pizza"
@@ -2994,6 +3137,7 @@
 	nutriment_desc = list("dough" = 3)
 	nutriment_amt = 3
 	preloaded_reagents = list("protein" = 1)
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 // Dough + rolling pin = flat dough
 /obj/item/weapon/reagent_containers/food/snacks/dough/attackby(obj/item/weapon/W as obj, mob/user as mob)
@@ -3012,6 +3156,7 @@
 	slices_num = 3
 	center_of_mass = list("x"=16, "y"=16)
 	preloaded_reagents = list("protein" = 1, "nutriment" = 3)
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/doughslice
 	name = "dough slice"
@@ -3024,6 +3169,7 @@
 	center_of_mass = list("x"=17, "y"=19)
 	nutriment_desc = list("dough" = 1)
 	nutriment_amt = 1
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/bun
 	name = "bun"
@@ -3034,6 +3180,7 @@
 	center_of_mass = list("x"=16, "y"=12)
 	nutriment_desc = list("bun" = 4)
 	nutriment_amt = 4
+	taste_tag = list(BLAND_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/bun/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	// Bun + meatball = burger
@@ -3089,7 +3236,7 @@
 	nutriment_amt = 4
 	preloaded_reagents = list("protein" = 3)
 	cooked = TRUE
-	taste_tag = list(CHEESE_FOOD)
+	taste_tag = list(CHEESE_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/rawcutlet
 	name = "raw cutlet"
@@ -3099,6 +3246,7 @@
 	bitesize = 1
 	center_of_mass = list("x"=17, "y"=20)
 	preloaded_reagents = list("protein" = 1)
+	taste_tag = list(MEAT_FOOD,FLOURY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/cutlet
 	name = "cutlet"
@@ -3108,6 +3256,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=17, "y"=20)
 	preloaded_reagents = list("protein" = 2)
+	taste_tag = list(MEAT_FOOD,SPICY_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/rawmeatball
 	name = "raw meatball"
@@ -3117,6 +3266,7 @@
 	bitesize = 2
 	center_of_mass = list("x"=16, "y"=15)
 	preloaded_reagents = list("protein" = 2)
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/hotdog
 	name = "hotdog"
@@ -3126,6 +3276,7 @@
 	center_of_mass = list("x"=16, "y"=17)
 	preloaded_reagents = list("protein" = 6)
 	junk_food = TRUE
+	taste_tag = list(MEAT_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/flatbread
 	name = "flatbread"
@@ -3136,6 +3287,7 @@
 	center_of_mass = list("x"=16, "y"=16)
 	nutriment_desc = list("bread" = 3)
 	nutriment_amt = 3
+	taste_tag = list(BLAND_FOOD)
 
 // potato + knife = raw sticks
 /obj/item/weapon/reagent_containers/food/snacks/grown/potato/attackby(obj/item/I, mob/user)
@@ -3156,6 +3308,7 @@
 	center_of_mass = list("x"=16, "y"=12)
 	nutriment_desc = list("raw potato" = 3)
 	nutriment_amt = 3
+	taste_tag = list(BLAND_FOOD,VEGAN_FOOD,VEGETARIAN_FOOD)
 
 /obj/item/weapon/reagent_containers/food/snacks/liquidfood
 	name = "\improper LiquidFood Ration"
@@ -3169,7 +3322,7 @@
 	nutriment_amt = 20
 	preloaded_reagents = list("iron" = 3)
 	junk_food = TRUE
-
+	taste_tag = list(BLAND_FOOD,UMAMI_FOOD)
 /obj/item/weapon/reagent_containers/food/snacks/tastybread
 	name = "bread tube"
 	desc = "Bread in a tube. Chewy...and surprisingly tasty."
@@ -3182,4 +3335,3 @@
 	nutriment_amt = 6
 	junk_food = TRUE
 	taste_tag = list(SWEET_FOOD)
-
