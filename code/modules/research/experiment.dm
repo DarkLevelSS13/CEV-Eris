@@ -1,5 +1,5 @@
 // Contains everything related to earning research points
-#define AUTOPSY_WEAPON_PAMT rand(5,10) * 200 // 1000-2000 points for random weapon
+#define AUTOPSY_WEAPON_PAMT rand(1,5) * 20 // 50-100 points for random weapon
 #define ARTIFACT_PAMT rand(5,10) * 1000 // 5000-10000 points for random artifact
 
 GLOBAL_LIST_EMPTY(explosion_watcher_list)
@@ -210,7 +210,7 @@ GLOBAL_LIST_EMPTY(explosion_watcher_list)
 			if(power > saved_power_level)
 				RD.files.experiments.saved_best_explosion = power
 
-			RD.files.research_points += calculated_research_points
+			RD.files.adjust_research_points(calculated_research_points)
 
 	if(calculated_research_points > 0)
 		autosay("Detected explosion with power level [power], received [calculated_research_points] research points", name ,"Science")
@@ -232,7 +232,8 @@ GLOBAL_LIST_EMPTY(explosion_watcher_list)
 	matter = list(MATERIAL_STEEL = 5)
 	origin_tech = list(TECH_ENGINEERING = 1, TECH_BIO = 1)
 	spawn_tags = SPAWN_TAG_DIVICE_SCIENCE
-	rarity_value = 7.5
+	spawn_frequency = 5
+	rarity_value = 8
 
 	var/datum/experiment_data/experiments
 	var/list/scanned_autopsy_weapons = list()

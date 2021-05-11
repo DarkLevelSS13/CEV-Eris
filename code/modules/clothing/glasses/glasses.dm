@@ -2,8 +2,7 @@
 	name = "glasses"
 	icon = 'icons/inventory/eyes/icon.dmi'
 	spawn_tags = SPAWN_TAG_GLASSES
-	bad_types = /obj/item/clothing/glasses
-	rarity_value = 20
+	bad_type = /obj/item/clothing/glasses
 	var/prescription = FALSE
 	var/toggleable = FALSE
 	var/off_state = "black_goggles"

@@ -2,7 +2,7 @@
 	name = "armory closet"
 	desc = "Why is this here?"
 	icon_state = "syndicate"
-	bad_types = /obj/structure/closet/syndicate
+	bad_type = /obj/structure/closet/syndicate
 	rarity_value = 100
 
 
@@ -36,6 +36,7 @@
 
 /obj/structure/closet/syndicate/nuclear
 	desc = "It's a storage unit for nuclear-operative gear."
+	spawn_blacklisted = TRUE
 
 /obj/structure/closet/syndicate/nuclear/populate_contents()
 	new /obj/item/ammo_magazine/smg(src)
@@ -57,4 +58,3 @@
 	new /obj/item/weapon/pinpointer/nukeop(src)
 	var/obj/item/device/radio/uplink/U = new(src)
 	U.hidden_uplink.uses = 40
-	return

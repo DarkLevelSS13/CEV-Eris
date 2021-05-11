@@ -26,7 +26,7 @@ var/list/global/tank_gauge_cache = list()
 	rarity_value = 10
 	spawn_frequency = 10
 	spawn_blacklisted = FALSE
-	bad_types = /obj/item/weapon/tank
+	bad_type = /obj/item/weapon/tank
 	spawn_tags = SPAWN_TAG_TANK_GAS
 
 	var/datum/gas_mixture/air_contents
@@ -259,10 +259,10 @@ var/list/global/tank_gauge_cache = list()
 	else
 		indicator = "[gauge_icon]-[round((gauge_pressure/default_pressure)*gauge_cap)]"
 
-	overlays.Cut()
+	cut_overlays()
 	if(!tank_gauge_cache[indicator])
 		tank_gauge_cache[indicator] = image(icon, indicator)
-	overlays += tank_gauge_cache[indicator]
+	add_overlays(tank_gauge_cache[indicator])
 
 /obj/item/weapon/tank/proc/check_status()
 	//Handle exploding, leaking, and rupturing of the tank

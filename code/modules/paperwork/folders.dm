@@ -5,7 +5,7 @@
 	icon_state = "folder"
 	w_class = ITEM_SIZE_SMALL
 	matter = list(MATERIAL_BIOMATTER = 2)
-	rarity_value = 2
+	rarity_value = 5
 	spawn_tags = SPAWN_TAG_JUNK
 
 /obj/item/weapon/folder/blue
@@ -24,10 +24,10 @@
 	desc = "A cyan folder."
 	icon_state = "folder_cyan"
 
-/obj/item/weapon/folder/update_icon()
-	overlays.Cut()
+/obj/item/weapon/folder/on_update_icon()
+	cut_overlays()
 	if(contents.len)
-		overlays += "folder_paper"
+		add_overlays("folder_paper")
 	return
 
 /obj/item/weapon/folder/attackby(obj/item/weapon/W as obj, mob/user as mob)

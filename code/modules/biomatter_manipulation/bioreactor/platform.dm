@@ -13,9 +13,6 @@
 	active_power_usage = 400
 	var/make_glasswalls_after_creation = FALSE
 
-	circuit = /obj/item/weapon/electronics/circuitboard/neotheology/bioreactor_platform
-
-
 /obj/machinery/multistructure/bioreactor_part/platform/Initialize()
 	. = ..()
 	update_icon()
@@ -36,17 +33,18 @@
 				if((issilicon(victim) || victim.mob_classification == CLASSIFICATION_SYNTHETIC) && victim.mob_size <= MOB_SMALL)
 					victim.forceMove(MS_bioreactor.misc_output)
 					continue
-				//if our target has hazard protection, then okay
-				var/hazard_protection = victim.getarmor(null, "bio")
-				if(!hazard_protection)
-					victim.apply_damage(CLONE_DAMAGE_PER_TICK, CLONE, used_weapon = "Biological")
-					if(prob(10))
-						playsound(loc, 'sound/effects/bubbles.ogg', 45, 1)
-					if(victim.health <= -victim.maxHealth)
-						MS_bioreactor.biotank_platform.take_amount(victim.mob_size*5)
-						MS_bioreactor.biotank_platform.pipes_wearout(victim.mob_size/5, forced = TRUE)
-						consume(victim)
-					continue
+				//if our target has hazard protection, apply damage based on the protection percentage.
+				var/hazard_protection = victim.getarmor(null, ARMOR_BIO)
+				var/damage = CLONE_DAMAGE_PER_TICK - (CLONE_DAMAGE_PER_TICK * (hazard_protection/100))
+				victim.apply_damage(damage, CLONE, used_weapon = "Biological")
+				
+				if(prob(10))
+					playsound(loc, 'sound/effects/bubbles.ogg', 45, 1)
+				if(victim.health <= -victim.maxHealth)
+					MS_bioreactor.biotank_platform.take_amount(victim.mob_size*5)
+					MS_bioreactor.biotank_platform.pipes_wearout(victim.mob_size/5, forced = TRUE)
+					consume(victim)
+				continue
 
 			//object processing
 			if(istype(M, /obj/item))
@@ -125,7 +123,7 @@
 		playsound(loc, 'sound/effects/bubbles.ogg', 50, 1)
 
 
-/obj/machinery/multistructure/bioreactor_part/platform/update_icon()
+/obj/machinery/multistructure/bioreactor_part/platform/on_update_icon()
 	var/corner_dir = 0		//used at sprite determination, direction point to center of whole bioreactor chamber
 	for(var/direction in cardinal)
 		if(locate(type) in get_step(src, direction))
@@ -208,8 +206,8 @@
 			to_chat(user, SPAN_NOTICE("This [src] is so clean, that you can see your reflection. Is that something green at your teeth?"))
 
 
-/obj/structure/window/reinforced/bioreactor/update_icon()
-	overlays.Cut()
+/obj/structure/window/reinforced/bioreactor/on_update_icon()
+	cut_overlays()
 	..()
 	if(contamination_level)
 		var/biomass_alpha = min((50*contamination_level), 255)
@@ -218,7 +216,7 @@
 		biomass.Turn(-40, 40)
 		biomass.Blend(rgb(0, 0, 0, biomass_alpha))
 		default.Blend(biomass, ICON_MULTIPLY)
-		overlays += default
+		add_overlays(default)
 
 
 /obj/structure/window/reinforced/bioreactor/proc/apply_dirt(var/amount)

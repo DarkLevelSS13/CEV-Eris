@@ -124,7 +124,7 @@
 		if(!R.stamped)
 			R.stamped = new
 		R.stamped += /obj/item/weapon/stamp
-		R.overlays += stampoverlay
+		R.add_overlays(stampoverlay)
 		R.stamps += "<HR><i>This paper has been stamped by the Accounts Database.</i>"
 
 	//add the account
@@ -138,7 +138,7 @@
 	var/datum/money_account/D = get_account(attempt_account_number)
 	if (D)
 		//create a transaction log entry
-		var/datum/transaction/T = new(amount*-1, target_name, purpose, terminal_id)
+		var/datum/transaction/T = new(-amount, target_name, purpose, terminal_id)
 		return T.apply_to(D)
 
 	return FALSE
@@ -171,6 +171,7 @@
 
 		//The transaction to give the money
 		var/datum/transaction/T2 = new(amount, source.get_name(), purpose, terminal_id)
+		SEND_SIGNAL(source, COMSIG_TRANSATION, source, target, amount)
 		return T2.apply_to(target)
 
 	return FALSE

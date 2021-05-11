@@ -30,7 +30,7 @@
 		"sugar","sacid","tungsten"
 	)
 	var/list/hacked_reagents = list()
-	var/obj/item/weapon/reagent_containers/beaker = null
+	var/obj/item/weapon/reagent_containers/beaker
 
 /obj/machinery/chemical_dispenser/RefreshParts()
 	cell = locate() in component_parts
@@ -44,6 +44,7 @@
 
 /obj/machinery/chemical_dispenser/power_change()
 	..()
+	update_icon()
 	SSnano.update_uis(src) // update all UIs attached to src
 
 /obj/machinery/chemical_dispenser/Process()
@@ -104,6 +105,7 @@
 		var/obj/item/weapon/reagent_containers/B = beaker
 		B.loc = loc
 		beaker = null
+		update_icon()
 
 /obj/machinery/chemical_dispenser/AltClick(mob/living/user)
 	if(user.incapacitated())
@@ -112,7 +114,7 @@
 	if(!in_range(src, user))
 		return
 	src.detach()
-	
+
 
 /obj/machinery/chemical_dispenser/Topic(href, href_list)
 	if(..())
@@ -144,7 +146,7 @@
 	if(!Adjacent(user) || !I.Adjacent(user) || user.stat)
 		return ..()
 	if(istype(I, /obj/item/weapon/reagent_containers) && I.is_open_container() && !beaker)
-		I.forceMove(src)
+		user.unEquip(I, src)
 		I.add_fingerprint(user)
 		beaker = I
 		to_chat(user, SPAN_NOTICE("You add [I] to [src]."))
@@ -169,6 +171,7 @@
 		src.beaker =  B
 		if (user.unEquip(B, src))
 			to_chat(user, "You set [B] on the machine.")
+			update_icon()
 			SSnano.update_uis(src) // update all UIs attached to src
 			return
 
@@ -183,6 +186,10 @@
 	desc = "A drink fabricating machine, capable of producing many sugary drinks with just one touch."
 	layer = OBJ_LAYER
 	ui_title = "Soda Dispens-o-matic"
+	var/icon_on = "soda_dispenser"
+
+	circuit = /obj/item/weapon/electronics/circuitboard/chemical_dispenser/soda
+
 	accept_beaker = FALSE
 	density = FALSE
 	dispensable_reagents = list("water","ice","coffee","cream","tea","greentea","icetea","icegreentea","cola","spacemountainwind","dr_gibb","space_up","tonic","sodawater","lemon_lime","sugar","orangejuice","limejuice","watermelonjuice")
@@ -200,11 +207,25 @@
 			to_chat(user, "You change the mode from 'Pizza King' to 'McNano'.")
 			dispensable_reagents -= hacked_reagents
 
+obj/machinery/chemical_dispenser/soda/on_update_icon()
+	cut_overlays()
+	if(stat & (BROKEN|NOPOWER))
+		icon_state = icon_on+"_off"
+	else
+		icon_state = icon_on
+	
+	if(beaker)
+		add_overlays(image(icon, icon_on+"_loaded"))
+
+
 /obj/machinery/chemical_dispenser/beer
 	icon_state = "booze_dispenser"
 	name = "booze dispenser"
 	layer = OBJ_LAYER
 	ui_title = "Booze Portal 9001"
+
+	circuit = /obj/item/weapon/electronics/circuitboard/chemical_dispenser/beer
+
 	accept_beaker = FALSE
 	density = FALSE
 	desc = "A technological marvel, supposedly able to mix just the mixture you'd like to drink the moment you ask for one."
@@ -249,6 +270,9 @@
 	icon = 'icons/obj/machines/chemistry.dmi'
 	icon_state = "industrial_dispenser"
 	ui_title = "Industrial Dispenser 4835"
+
+	circuit = /obj/item/weapon/electronics/circuitboard/chemical_dispenser/industrial
+
 	dispensable_reagents = list(
 		"acetone","aluminum","ammonia",
 		"copper","ethanol","hydrazine",

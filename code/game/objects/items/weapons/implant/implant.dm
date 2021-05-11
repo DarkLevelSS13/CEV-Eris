@@ -22,7 +22,7 @@
 
 /obj/item/weapon/implant/attackby(obj/item/weapon/I, mob/user)
 	..()
-	if (istype(I, /obj/item/weapon/implanter))
+	if(istype(I, /obj/item/weapon/implanter))
 		var/obj/item/weapon/implanter/M = I
 		if(is_external())
 			return
@@ -67,17 +67,18 @@
 	if(!can_install(target, affected))
 		to_chat(user, SPAN_WARNING("You can't install [src]."))
 		return
-
 	forceMove(target)
 	wearer = target
 	implanted = TRUE
 	if(affected)
-		affected.implants += src
+		affected.implants |= src
 		part = affected
 		SSnano.update_uis(affected) // Update surgery UI window, if any
 
 	on_install(target, affected)
 	wearer.update_implants()
+	for(var/mob/living/carbon/human/H in viewers(target))
+		SEND_SIGNAL(H, COMSIG_HUMAN_INSTALL_IMPLANT, target, src)
 	return TRUE
 
 /obj/item/weapon/implant/proc/can_install(var/mob/living/target, var/obj/item/organ/external/E)
@@ -88,7 +89,8 @@
 /obj/item/weapon/implant/proc/uninstall()
 	on_uninstall()
 	forceMove(get_turf(wearer))
-	part.implants.Remove(src)
+	if(part)
+		part.implants.Remove(src)
 	part = null
 	implanted = FALSE
 	if(ishuman(wearer))

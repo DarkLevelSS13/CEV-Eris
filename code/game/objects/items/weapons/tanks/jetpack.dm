@@ -9,7 +9,7 @@
 	force = WEAPON_FORCE_PAINFUL
 	distribute_pressure = ONE_ATMOSPHERE*O2STANDARD
 	default_pressure = 6*ONE_ATMOSPHERE
-	bad_types = /obj/item/weapon/tank/jetpack
+	bad_type = /obj/item/weapon/tank/jetpack
 	spawn_tags = SPAWN_TAG_JETPACK
 	rarity_value = 50
 	var/datum/effect/effect/system/trail/jet/trail
@@ -300,6 +300,7 @@
 /obj/item/weapon/tank/jetpack/rig
 	name = "maneuvring jets"
 	var/obj/item/weapon/rig/holder
+	spawn_tags = null
 
 //The rig jetpack uses the suit's gastank, this is set during the install proc for the rig module
 
@@ -318,6 +319,7 @@
 	desc = "A tank of compressed air for use as propulsion in zero-gravity areas. Has a built in compressor to refill it in any gaseous environment."
 	default_pressure = 6*ONE_ATMOSPHERE	// kPa. Also the pressure the compressor would fill itself to
 	default_gas = "carbon_dioxide"
+	spawn_tags = null
 	var/processing = FALSE
 	var/compressing = FALSE
 	var/minimum_pressure = 95 //KPa. If environment pressure is less than this, we won't draw air
